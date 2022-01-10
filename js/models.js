@@ -115,6 +115,23 @@ class User {
     this.loginToken = token;
   }
 
+  async addStoryToFavorites(storyId, username = this.username) {
+    const response = await axios({
+      url: `${BASE_URL}/users/${username}/favorites/${storyId}`,
+      method: "POST",
+      data: { token: this.loginToken },
+    });
+    // Update information NOW
+
+  }
+
+  removeStoryFromFavorites(story) {
+    // const idToRemove = story.storyId;
+    // this.favorites = this.favorites.filter(function(obj) {
+    //   return obj.storyId !== idToRemove;
+    // })
+  }
+
   /** Register new user in API, make User instance & return it.
    *
    * - username: a new username
