@@ -105,5 +105,19 @@ function putUserStoriesOnPage() {
   $allStoriesList.show();
 }
 
+async function toggleFavorite(evt) {
+  const $target = $(this);
+  const id = $(this).parent().attr('id');
+  const isFavorite = $(this).hasClass('fas');
+
+  if (isFavorite) {
+    await currentUser.removeStoryFromFavorites(id);
+  } else {
+    await currentUser.addStoryToFavorites(id);
+  }
+  $(this).toggleClass('fas far');
+}
+
 $navFavorite.on("click", putFavoritesOnPage);
 $navMyStories.on("click", putUserStoriesOnPage);
+$('body').on('click', '.fa-star', toggleFavorite)

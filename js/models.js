@@ -244,21 +244,6 @@ class User {
 }
 }
 
-$('body').on('click', '.fa-star', function (evt) {
-  const id = $(this).parent().attr('id');
-
-  if ($(this).hasClass('fas')) { // previously was a favorite
-    currentUser.removeStoryFromFavorites(id);
-    $(this).addClass('far');
-    $(this).removeClass('fas');
-  } else {
-    currentUser.addStoryToFavorites(id);
-    $(this).addClass('fas');
-    $(this).removeClass('far');
-  }
-})
-
-
 // This can be improved:
 function applyStarClasses() {
   const favIds = currentUser.favorites.map(obj => obj.storyId);
