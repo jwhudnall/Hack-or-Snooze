@@ -18,7 +18,8 @@ async function submitNewStory(evt) {
   const author = $('#submit-form input[name="submit-author"]').val();
   const url = $('#submit-form input[name="submit-url"]').val();
 
-  await storyList.addStory(currentUser, {title, author, url});
+  const newStory = await storyList.addStory(currentUser, {title, author, url});
+  currentUser.ownStories.push(newStory);
   await getAndShowStoriesOnStart();
   $submitForm.trigger('reset').hide();
 }
@@ -33,8 +34,7 @@ $submitForm.on('submit', submitNewStory);
  */
 
 function generateStoryMarkup(story) {
-  // console.debug("generateStoryMarkup", story);
-
+  console.debug("generateStoryMarkup", story);
   const hostName = story.getHostName();
   return $(`
       <li id="${story.storyId}">
@@ -68,6 +68,7 @@ function putStoriesOnPage() {
 
 function putFavoritesOnPage() {
   $allStoriesList.empty();
+  hidePageComponents();
   const favorites = currentUser.favorites;
 
   if (favorites.length >= 1) {
@@ -83,7 +84,25 @@ function putFavoritesOnPage() {
     const $noFavoriteMsg = $('<h5><i>Stories you favorite will appear here</i></h5>');
     $allStoriesList.append($noFavoriteMsg);
   }
+}
 
+function putUserStoriesOnPage() {
+  $allStoriesList.empty();
+  hidePageComponents();
+  const userStories = currentUser.ownStories;
+
+  if (userStories.length >= 1) {
+    for (let story of userStories) {
+      const $story = generateStoryMarkup(story); // Need to add trashcan
+      $allStoriesList.append($story);
+      applyStarClasses();
+      $allStoriesList.show();
+    }
+  } else {
+    const $noStoriesMsg = $('<h5><i>Stories You submit will appear here.</i></h5>');
+    $allStoriesList.append($noStoriesMsg);
+  }
 }
 
 $navFavorite.on("click", putFavoritesOnPage);
+$navMyStories.on("click", putUserStoriesOnPage);
