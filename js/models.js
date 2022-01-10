@@ -25,7 +25,6 @@ class Story {
 
   getHostName() {
     let fullURL = this.url;
-
     return fullURL.split('://')[1];
   }
 }
@@ -74,13 +73,16 @@ class StoryList {
    * Returns the new Story instance
    */
 
-  async addStory( user, newStory/* user, newStory */) {
-    const story = new Story(newStory);
+  async addStory(user, newStory/* user, newStory */) {
     const response = await axios({
       url: `${BASE_URL}/stories`,
       method: "POST",
-      data: {token: user.loginToken, story}
+      data: { token: user.loginToken, story: {title: newStory.title, author: newStory.author, url: newStory.url} }
     });
+    const story = new Story(response.data.story);
+    this.stories.push(story);
+    user.ownStories.push(story);
+
     return story;
   }
 }
@@ -97,13 +99,13 @@ class User {
    */
 
   constructor({
-                username,
-                name,
-                createdAt,
-                favorites = [],
-                ownStories = []
-              },
-              token) {
+    username,
+    name,
+    createdAt,
+    favorites = [],
+    ownStories = []
+  },
+    token) {
     this.username = username;
     this.name = name;
     this.createdAt = createdAt;
@@ -134,13 +136,27 @@ class User {
     await axios({
       url: `${BASE_URL}/users/${username}/favorites/${storyId}`,
       method: "DELETE",
-      data: {token: this.loginToken}
+      data: { token: this.loginToken }
     });
     // Update information NOW?
     // GET request with story ID parameter
     const idx = this.favorites.findIndex(obj => obj.storyId === storyId);
     this.favorites.splice(idx, 1);
   }
+
+  async deleteUserStory(storyId) {
+  const story = await axios({
+    url: `${BASE_URL}/stories/${storyId}`,
+    method: "DELETE",
+    data: { token: this.loginToken }
+  });
+  // Delete locally
+  const idx = this.ownStories.findIndex(obj => obj.storyId === storyId);
+  this.ownStories.splice(idx, 1);
+}
+
+
+
 
   /** Register new user in API, make User instance & return it.
    *
@@ -150,25 +166,25 @@ class User {
    */
 
   static async signup(username, password, name) {
-    const response = await axios({
-      url: `${BASE_URL}/signup`,
-      method: "POST",
-      data: { user: { username, password, name } },
-    });
+  const response = await axios({
+    url: `${BASE_URL}/signup`,
+    method: "POST",
+    data: { user: { username, password, name } },
+  });
 
-    let { user } = response.data
+  let { user } = response.data
 
-    return new User(
-      {
-        username: user.username,
-        name: user.name,
-        createdAt: user.createdAt,
-        favorites: user.favorites,
-        ownStories: user.stories
-      },
-      response.data.token
-    );
-  }
+  return new User(
+    {
+      username: user.username,
+      name: user.name,
+      createdAt: user.createdAt,
+      favorites: user.favorites,
+      ownStories: user.stories
+    },
+    response.data.token
+  );
+}
 
   /** Login in user with API, make User instance & return it.
 
@@ -177,10 +193,36 @@ class User {
    */
 
   static async login(username, password) {
+  const response = await axios({
+    url: `${BASE_URL}/login`,
+    method: "POST",
+    data: { user: { username, password } },
+  });
+
+  let { user } = response.data;
+
+  return new User(
+    {
+      username: user.username,
+      name: user.name,
+      createdAt: user.createdAt,
+      favorites: user.favorites,
+      ownStories: user.stories
+    },
+    response.data.token
+  );
+}
+
+  /** When we already have credentials (token & username) for a user,
+   *   we can log them in automatically. This function does that.
+   */
+
+  static async loginViaStoredCredentials(token, username) {
+  try {
     const response = await axios({
-      url: `${BASE_URL}/login`,
-      method: "POST",
-      data: { user: { username, password } },
+      url: `${BASE_URL}/users/${username}`,
+      method: "GET",
+      params: { token }
     });
 
     let { user } = response.data;
@@ -193,42 +235,16 @@ class User {
         favorites: user.favorites,
         ownStories: user.stories
       },
-      response.data.token
+      token
     );
-  }
-
-  /** When we already have credentials (token & username) for a user,
-   *   we can log them in automatically. This function does that.
-   */
-
-  static async loginViaStoredCredentials(token, username) {
-    try {
-      const response = await axios({
-        url: `${BASE_URL}/users/${username}`,
-        method: "GET",
-        params: { token },
-      });
-
-      let { user } = response.data;
-
-      return new User(
-        {
-          username: user.username,
-          name: user.name,
-          createdAt: user.createdAt,
-          favorites: user.favorites,
-          ownStories: user.stories
-        },
-        token
-      );
-    } catch (err) {
-      console.error("loginViaStoredCredentials failed", err);
-      return null;
-    }
+  } catch (err) {
+    console.error("loginViaStoredCredentials failed", err);
+    return null;
   }
 }
+}
 
-$('body').on('click', '.fa-star', function(evt) {
+$('body').on('click', '.fa-star', function (evt) {
   const id = $(this).parent().attr('id');
 
   if ($(this).hasClass('fas')) { // previously was a favorite
@@ -246,7 +262,7 @@ $('body').on('click', '.fa-star', function(evt) {
 // This can be improved:
 function applyStarClasses() {
   const favIds = currentUser.favorites.map(obj => obj.storyId);
-  $('li').each(function(i) {
+  $('li').each(function () {
     const $id = $(this).attr('id');
     const inFavorites = favIds.includes($id);
     // if $(this).attr('id')
@@ -258,5 +274,18 @@ function applyStarClasses() {
       // apply far class
       $($(this).children('i')[0]).addClass('far');
     }
+  })
+}
+
+function applyDeleteBtn() {
+  const $trashBtn = $('<i class="fa fa-trash" aria-hidden="true"></i>');
+  $('li').prepend($trashBtn);
+
+  $('.fa-trash').on('click', async function (e) {
+    const $li = $(this).parent(); // .remove()
+    const storyId = $(this).parent().attr('id');
+    $li.remove();
+    await currentUser.deleteUserStory(storyId);
+    putUserStoriesOnPage();
   })
 }

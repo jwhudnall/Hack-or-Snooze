@@ -19,7 +19,6 @@ async function submitNewStory(evt) {
   const url = $('#submit-form input[name="submit-url"]').val();
 
   const newStory = await storyList.addStory(currentUser, {title, author, url});
-  currentUser.ownStories.push(newStory);
   await getAndShowStoriesOnStart();
   $submitForm.trigger('reset').hide();
 }
@@ -78,12 +77,12 @@ function putFavoritesOnPage() {
       $allStoriesList.append($story);
     }
     applyStarClasses();
-    $allStoriesList.show();
   } else {
     // Add "No Favorites Yet!" to page
     const $noFavoriteMsg = $('<h5><i>Stories you favorite will appear here</i></h5>');
     $allStoriesList.append($noFavoriteMsg);
   }
+  $allStoriesList.show();
 }
 
 function putUserStoriesOnPage() {
@@ -95,13 +94,15 @@ function putUserStoriesOnPage() {
     for (let story of userStories) {
       const $story = generateStoryMarkup(story); // Need to add trashcan
       $allStoriesList.append($story);
-      applyStarClasses();
-      $allStoriesList.show();
     }
+    applyStarClasses();
+    applyDeleteBtn();
+    // $allStoriesList.show();
   } else {
-    const $noStoriesMsg = $('<h5><i>Stories You submit will appear here.</i></h5>');
+    const $noStoriesMsg = $('<h5>Stories You submit will appear here.</h5>');
     $allStoriesList.append($noStoriesMsg);
   }
+  $allStoriesList.show();
 }
 
 $navFavorite.on("click", putFavoritesOnPage);
