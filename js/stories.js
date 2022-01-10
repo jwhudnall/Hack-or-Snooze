@@ -12,6 +12,19 @@ async function getAndShowStoriesOnStart() {
   putStoriesOnPage();
 }
 
+async function submitNewStory(evt) {
+  evt.preventDefault();
+  const title = $('#submit-form input[name="submit-title"]').val();
+  const author = $('#submit-form input[name="submit-author"]').val();
+  const url = $('#submit-form input[name="submit-url"]').val();
+
+  await storyList.addStory(currentUser, {title, author, url});
+  await getAndShowStoriesOnStart();
+  $submitForm.trigger('reset').hide();
+}
+
+$submitForm.on('submit', submitNewStory);
+
 /**
  * A render method to render HTML for an individual Story instance
  * - story: an instance of Story
