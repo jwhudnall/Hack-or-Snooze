@@ -121,15 +121,24 @@ class User {
       method: "POST",
       data: { token: this.loginToken },
     });
-    // Update information NOW
 
+    for (let story of storyList.stories) {
+      if (story.storyId === storyId) {
+        this.favorites.push(story);
+      }
+    }
   }
 
-  removeStoryFromFavorites(story) {
-    // const idToRemove = story.storyId;
-    // this.favorites = this.favorites.filter(function(obj) {
-    //   return obj.storyId !== idToRemove;
-    // })
+  async removeStoryFromFavorites(storyId, username = this.username) {
+    await axios({
+      url: `${BASE_URL}/users/${username}/favorites/${storyId}`,
+      method: "DELETE",
+      data: {token: this.loginToken}
+    });
+    // Update information NOW?
+    // GET request with story ID parameter
+    const idx = this.favorites.findIndex(obj => obj.storyId === storyId);
+    this.favorites.splice(idx, 1);
   }
 
   /** Register new user in API, make User instance & return it.
@@ -216,4 +225,37 @@ class User {
       return null;
     }
   }
+}
+
+$('body').on('click', '.fa-star', function(evt) {
+  const id = $(this).parent().attr('id');
+
+  if ($(this).hasClass('fas')) { // previously was a favorite
+    currentUser.removeStoryFromFavorites(id);
+    $(this).addClass('far');
+    $(this).removeClass('fas');
+  } else {
+    currentUser.addStoryToFavorites(id);
+    $(this).addClass('fas');
+    $(this).removeClass('far');
+  }
+})
+
+
+// This can be improved:
+function applyStarClasses() {
+  const favIds = currentUser.favorites.map(obj => obj.storyId);
+  $('li').each(function(i) {
+    const $id = $(this).attr('id');
+    const inFavorites = favIds.includes($id);
+    // if $(this).attr('id')
+    if (inFavorites) {
+      // apply fas class to ID, not LI
+      $($(this).children('i')[0]).addClass('fas');
+    }
+    else {
+      // apply far class
+      $($(this).children('i')[0]).addClass('far');
+    }
+  })
 }

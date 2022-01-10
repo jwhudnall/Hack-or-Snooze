@@ -41,3 +41,6 @@ function displaySubmitForm(evt) {
 }
 
 $navSubmit.on("click", displaySubmitForm);
+// $navFavorite.on("click", putFavoritesOnPage);
+
+// Star onclick: toggleFavorite. Opposite of current status

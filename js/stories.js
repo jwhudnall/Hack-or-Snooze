@@ -38,6 +38,7 @@ function generateStoryMarkup(story) {
   const hostName = story.getHostName();
   return $(`
       <li id="${story.storyId}">
+        <i class="fa-star"></i>
         <a href="${story.url}" target="a_blank" class="story-link">
           ${story.title}
         </a>
@@ -60,6 +61,29 @@ function putStoriesOnPage() {
     const $story = generateStoryMarkup(story);
     $allStoriesList.append($story);
   }
+  applyStarClasses();
 
   $allStoriesList.show();
 }
+
+function putFavoritesOnPage() {
+  $allStoriesList.empty();
+  const favorites = currentUser.favorites;
+
+  if (favorites.length >= 1) {
+    // loop through all of our stories and generate HTML for them
+    for (let story of favorites) {
+      const $story = generateStoryMarkup(story);
+      $allStoriesList.append($story);
+    }
+    applyStarClasses();
+    $allStoriesList.show();
+  } else {
+    // Add "No Favorites Yet!" to page
+    const $noFavoriteMsg = $('<h5><i>Stories you favorite will appear here</i></h5>');
+    $allStoriesList.append($noFavoriteMsg);
+  }
+
+}
+
+$navFavorite.on("click", putFavoritesOnPage);
