@@ -249,6 +249,7 @@ class User {
 // This functionality should be incorporated directly within generate markup
 function applyStarClasses() {
   if (currentUser) {
+    $('i.fa-star').show();
     const favIds = currentUser.favorites.map(obj => obj.storyId);
     $('li').each(function () {
       const $id = $(this).attr('id');
