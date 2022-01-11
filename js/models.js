@@ -125,11 +125,11 @@ class User {
       data: { token: this.loginToken },
     });
 
-    for (let story of storyList.stories) {
-      if (story.storyId === storyId) {
-        this.favorites.push(story);
-      }
-    }
+    // for (let story of storyList.stories) {
+    //   if (story.storyId === storyId) {
+    //     this.favorites.push(story);
+    //   }
+    // }
   }
 
   async removeStoryFromFavorites(storyId, username = this.username) {
@@ -246,20 +246,22 @@ class User {
 
 // This can be improved:
 function applyStarClasses() {
-  const favIds = currentUser.favorites.map(obj => obj.storyId);
-  $('li').each(function () {
-    const $id = $(this).attr('id');
-    const inFavorites = favIds.includes($id);
-    // if $(this).attr('id')
-    if (inFavorites) {
-      // apply fas class to ID, not LI
-      $($(this).children('i')[0]).addClass('fas');
-    }
-    else {
-      // apply far class
-      $($(this).children('i')[0]).addClass('far');
-    }
-  })
+  if (currentUser) {
+    const favIds = currentUser.favorites.map(obj => obj.storyId);
+    $('li').each(function () {
+      const $id = $(this).attr('id');
+      const inFavorites = favIds.includes($id);
+
+      if (inFavorites) {
+        $($(this).children('i')[0]).addClass('fas');
+      }
+      else {
+        $($(this).children('i')[0]).addClass('far');
+      }
+    })
+  } else {
+    $('i.fa-star').addClass('far');
+  }
 }
 
 function applyDeleteBtn() {
