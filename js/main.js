@@ -47,6 +47,8 @@ async function start() {
   if (currentUser) updateUIOnUserLogin();
 }
 
+
+
 // Once the DOM is entirely loaded, begin the app
 
 console.warn("HEY STUDENT: This program sends many debug messages to" +

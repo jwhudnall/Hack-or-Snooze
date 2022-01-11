@@ -107,6 +107,12 @@ form > hr {
   width: 70px;
 }
 
+#submit-form {
+  width: 100%;
+  margin: 0;
+  background-color: #f6f6ef;
+}
+
 
 /* responsive queries for tightening things up for mobile. */
 

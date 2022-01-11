@@ -21,3 +21,23 @@ nav {
   margin-left: auto;
   text-align: right;
 }
+
+.fa-trash:hover {
+  color: red;
+}
+
+.fa-star:hover {
+  color: gold;
+}
+i {
+  cursor: pointer;
+}
+
+#nav-submit,
+#nav-favorites,
+#nav-my-stories {
+  border-left: 1px solid black;
+  padding: 5px 5px;
+  margin: 0;
+  font-weight: normal;
+}

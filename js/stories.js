@@ -105,7 +105,7 @@ function putUserStoriesOnPage() {
   $allStoriesList.show();
 }
 
-async function toggleFavorite(evt) {
+async function toggleFavorite() {
   const $target = $(this);
   const id = $(this).parent().attr('id');
   const isFavorite = $(this).hasClass('fas');

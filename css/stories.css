@@ -38,20 +38,5 @@
   display: block;
 }
 
-/* Star Checkbox */
-.star {
-  visibility:hidden;
-  font-size: 14px;
-  cursor:pointer;
-}
-
-.star:before {
-  content: "\2605";
-  /* position: absolute; */
-  visibility:visible;
-}
-
-.star:checked:before {
-  content: "\2606";
-  /* position: absolute; */
-}
+#submit-form h4 {
+  margin: 1vmin 0 0 10vmin;
