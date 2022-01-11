@@ -77,11 +77,11 @@ class StoryList {
     const response = await axios({
       url: `${BASE_URL}/stories`,
       method: "POST",
-      data: { token: user.loginToken, story: {title: newStory.title, author: newStory.author, url: newStory.url} }
+      data: { token: user.loginToken, story: { title: newStory.title, author: newStory.author, url: newStory.url } }
     });
     const story = new Story(response.data.story);
-    this.stories.push(story);
-    user.ownStories.push(story);
+    this.stories.unshift(story);
+    user.ownStories.unshift(story);
 
     return story;
   }
@@ -125,6 +125,9 @@ class User {
       data: { token: this.loginToken },
     });
 
+    const story = storyList.stories.find(s => s.storyId === storyId);
+    this.favorites.push(story);
+
     // for (let story of storyList.stories) {
     //   if (story.storyId === storyId) {
     //     this.favorites.push(story);
@@ -138,22 +141,32 @@ class User {
       method: "DELETE",
       data: { token: this.loginToken }
     });
-    // Update information NOW?
-    // GET request with story ID parameter
+    // Add locally
     const idx = this.favorites.findIndex(obj => obj.storyId === storyId);
     this.favorites.splice(idx, 1);
   }
 
   async deleteUserStory(storyId) {
-  const story = await axios({
-    url: `${BASE_URL}/stories/${storyId}`,
-    method: "DELETE",
-    data: { token: this.loginToken }
-  });
-  // Delete locally
-  const idx = this.ownStories.findIndex(obj => obj.storyId === storyId);
-  this.ownStories.splice(idx, 1);
-}
+    const story = await axios({
+      url: `${BASE_URL}/stories/${storyId}`,
+      method: "DELETE",
+      data: { token: this.loginToken }
+    });
+    this.deleteLocally(storyId);
+  }
+
+  deleteLocally(storyId) {
+    const storyListIdx = storyList.stories.findIndex(obj => obj.storyId === storyId);
+    storyList.stories.splice(storyListIdx, 1);
+
+    const localIdx = this.ownStories.findIndex(obj => obj.storyId === storyId);
+    this.ownStories.splice(localIdx, 1);
+
+    const favoriteIdx = this.favorites.findIndex(obj => obj.storyId === storyId);
+    if (favoriteIdx !== -1) {
+      this.favorites.splice(favoriteIdx, 1);
+    }
+  }
 
 
 
@@ -166,66 +179,13 @@ class User {
    */
 
   static async signup(username, password, name) {
-  const response = await axios({
-    url: `${BASE_URL}/signup`,
-    method: "POST",
-    data: { user: { username, password, name } },
-  });
-
-  let { user } = response.data
-
-  return new User(
-    {
-      username: user.username,
-      name: user.name,
-      createdAt: user.createdAt,
-      favorites: user.favorites,
-      ownStories: user.stories
-    },
-    response.data.token
-  );
-}
-
-  /** Login in user with API, make User instance & return it.
-
-   * - username: an existing user's username
-   * - password: an existing user's password
-   */
-
-  static async login(username, password) {
-  const response = await axios({
-    url: `${BASE_URL}/login`,
-    method: "POST",
-    data: { user: { username, password } },
-  });
-
-  let { user } = response.data;
-
-  return new User(
-    {
-      username: user.username,
-      name: user.name,
-      createdAt: user.createdAt,
-      favorites: user.favorites,
-      ownStories: user.stories
-    },
-    response.data.token
-  );
-}
-
-  /** When we already have credentials (token & username) for a user,
-   *   we can log them in automatically. This function does that.
-   */
-
-  static async loginViaStoredCredentials(token, username) {
-  try {
     const response = await axios({
-      url: `${BASE_URL}/users/${username}`,
-      method: "GET",
-      params: { token }
+      url: `${BASE_URL}/signup`,
+      method: "POST",
+      data: { user: { username, password, name } },
     });
 
-    let { user } = response.data;
+    let { user } = response.data
 
     return new User(
       {
@@ -235,16 +195,70 @@ class User {
         favorites: user.favorites,
         ownStories: user.stories
       },
-      token
+      response.data.token
     );
-  } catch (err) {
-    console.error("loginViaStoredCredentials failed", err);
-    return null;
+  }
+
+  /** Login in user with API, make User instance & return it.
+
+   * - username: an existing user's username
+   * - password: an existing user's password
+   */
+
+  static async login(username, password) {
+    const response = await axios({
+      url: `${BASE_URL}/login`,
+      method: "POST",
+      data: { user: { username, password } },
+    });
+
+    let { user } = response.data;
+
+
+    return new User(
+      {
+        username: user.username,
+        name: user.name,
+        createdAt: user.createdAt,
+        favorites: user.favorites,
+        ownStories: user.stories
+      },
+      response.data.token
+    );
+  }
+
+  /** When we already have credentials (token & username) for a user,
+   *   we can log them in automatically. This function does that.
+   */
+
+  static async loginViaStoredCredentials(token, username) {
+    try {
+      const response = await axios({
+        url: `${BASE_URL}/users/${username}`,
+        method: "GET",
+        params: { token }
+      });
+
+      let { user } = response.data;
+
+      return new User(
+        {
+          username: user.username,
+          name: user.name,
+          createdAt: user.createdAt,
+          favorites: user.favorites,
+          ownStories: user.stories
+        },
+        token
+      );
+    } catch (err) {
+      console.error("loginViaStoredCredentials failed", err);
+      return null;
+    }
   }
 }
-}
 
-// This can be improved:
+// This functionality should be incorporated directly within generate markup
 function applyStarClasses() {
   if (currentUser) {
     const favIds = currentUser.favorites.map(obj => obj.storyId);
@@ -260,19 +274,38 @@ function applyStarClasses() {
       }
     })
   } else {
-    $('i.fa-star').addClass('far');
+    $('i.fa-star').hide();
   }
 }
 
-function applyDeleteBtn() {
+function applyDeleteBtn(targetId = false) {
   const $trashBtn = $('<i class="fa fa-trash" aria-hidden="true"></i>');
-  $('li').prepend($trashBtn);
-
-  $('.fa-trash').on('click', async function (e) {
-    const $li = $(this).parent(); // .remove()
-    const storyId = $(this).parent().attr('id');
-    $li.remove();
-    await currentUser.deleteUserStory(storyId);
-    putUserStoriesOnPage();
-  })
+  if (targetId) {
+    $(`#${targetId}`).prepend($trashBtn); // Adds trash icon to top-most LI
+  } else {
+    $('li').prepend($trashBtn);; // Adds trash icon before all star icons for all LI
+  }
 }
+
+$('body').on('click', '.fa-trash', async function () {
+  const $li = $(this).parent(); // .remove()
+  const storyId = $(this).parent().attr('id');
+  $li.remove();
+  await currentUser.deleteUserStory(storyId);
+  putUserStoriesOnPage();
+})
+
+// Basic login/account creation error response via alerts. Source: Source: https://stackoverflow.com/questions/47216452/how-to-handle-401-authentication-error-in-axios-and-react
+window.axios.interceptors.response.use(function (response) {
+  return response;
+}, function (e) {
+  if (401 === e.response.status) {
+    alert('Incorrect Password. Please try again');
+  } else if (404 === e.response.status) {
+    alert('Incorrect Username. Please try again')
+  } else if (e.response.status === 409) {
+    alert('That username is already taken. Please choose another.')
+  } else {
+    return Promise.reject(e);
+  }
+});

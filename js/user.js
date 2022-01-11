@@ -113,4 +113,5 @@ function updateUIOnUserLogin() {
   $allStoriesList.show();
 
   updateNavOnLogin();
+  applyStarClasses();
 }

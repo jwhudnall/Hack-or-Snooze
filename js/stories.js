@@ -19,11 +19,28 @@ async function submitNewStory(evt) {
   const url = $('#submit-form input[name="submit-url"]').val();
 
   const newStory = await storyList.addStory(currentUser, {title, author, url});
-  await getAndShowStoriesOnStart();
+  const $newStory = generateStoryMarkup(newStory);
+  // Add star class. Add trash can here.
+  const storyId = $newStory.closest('li').attr('id');
+
+  $allStoriesList.prepend($newStory);
+  applyStarClasses();
+  applyDeleteBtn(storyId);
+  $('#no-user-stories-msg').remove(); // Redundant after 1 or more stories exist?
+  $('#no-favorite-stories-msg').remove(); // Redundant after 1 more more
+  // await getAndShowStoriesOnStart(); // Remove?
   $submitForm.trigger('reset').hide();
 }
 
 $submitForm.on('submit', submitNewStory);
+
+function createDeleteBtnHTML() {
+
+}
+
+function createStarBtnHTML() {
+
+}
 
 /**
  * A render method to render HTML for an individual Story instance
@@ -33,8 +50,9 @@ $submitForm.on('submit', submitNewStory);
  */
 
 function generateStoryMarkup(story) {
-  console.debug("generateStoryMarkup", story);
   const hostName = story.getHostName();
+  // if user is logged in, show star. if favorites, apply fas class; else, far class
+  // if
   return $(`
       <li id="${story.storyId}">
         <i class="fa-star"></i>
@@ -78,8 +96,7 @@ function putFavoritesOnPage() {
     }
     applyStarClasses();
   } else {
-    // Add "No Favorites Yet!" to page
-    const $noFavoriteMsg = $('<h5><i>Stories you favorite will appear here</i></h5>');
+    const $noFavoriteMsg = $('<h5 id="no-favorite-stories-msg">Stories you favorite will appear here</h5>');
     $allStoriesList.append($noFavoriteMsg);
   }
   $allStoriesList.show();
@@ -91,20 +108,21 @@ function putUserStoriesOnPage() {
   const userStories = currentUser.ownStories;
 
   if (userStories.length >= 1) {
+
     for (let story of userStories) {
       const $story = generateStoryMarkup(story); // Need to add trashcan
       $allStoriesList.append($story);
     }
     applyStarClasses();
     applyDeleteBtn();
-    // $allStoriesList.show();
   } else {
-    const $noStoriesMsg = $('<h5>Stories You submit will appear here.</h5>');
+    const $noStoriesMsg = $('<h5 id="no-user-stories-msg">Stories you submit will appear here.</h5>');
     $allStoriesList.append($noStoriesMsg);
   }
   $allStoriesList.show();
 }
 
+// Handle star icon toggle
 async function toggleFavorite() {
   const $target = $(this);
   const id = $(this).parent().attr('id');
@@ -120,4 +138,4 @@ async function toggleFavorite() {
 
 $navFavorite.on("click", putFavoritesOnPage);
 $navMyStories.on("click", putUserStoriesOnPage);
-$('body').on('click', '.fa-star', toggleFavorite)
+$('body').on('click', '.fa-star', toggleFavorite);
