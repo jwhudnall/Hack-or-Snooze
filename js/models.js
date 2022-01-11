@@ -143,9 +143,8 @@ class User {
       method: "DELETE",
       data: { token: this.loginToken }
     });
-    // Add locally
-    const idx = this.favorites.findIndex(obj => obj.storyId === storyId);
-    this.favorites.splice(idx, 1);
+    // Remove locally from favorites
+    this.favorites = this.favorites.filter(s => s.storyId !== storyId);
   }
 
   async deleteUserStory(storyId) {
@@ -154,24 +153,11 @@ class User {
       method: "DELETE",
       data: { token: this.loginToken }
     });
-    this.deleteLocally(storyId);
+    // Remove locally
+    this.favorites = this.favorites.filter(s => s.storyId !== storyId);
+    this.ownStories = this.ownStories.filter(s => s.storyId !== storyId);
+    storyList.stories = storyList.stories.filter(s => s.storyId !== storyId);
   }
-
-  deleteLocally(storyId) {
-    const storyListIdx = storyList.stories.findIndex(obj => obj.storyId === storyId);
-    storyList.stories.splice(storyListIdx, 1);
-
-    const localIdx = this.ownStories.findIndex(obj => obj.storyId === storyId);
-    this.ownStories.splice(localIdx, 1);
-
-    const favoriteIdx = this.favorites.findIndex(obj => obj.storyId === storyId);
-    if (favoriteIdx !== -1) {
-      this.favorites.splice(favoriteIdx, 1);
-    }
-  }
-
-
-
 
   /** Register new user in API, make User instance & return it.
    *

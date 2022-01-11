@@ -34,14 +34,6 @@ async function submitNewStory(evt) {
 
 $submitForm.on('submit', submitNewStory);
 
-function createDeleteBtnHTML() {
-
-}
-
-function createStarBtnHTML() {
-
-}
-
 /**
  * A render method to render HTML for an individual Story instance
  * - story: an instance of Story
