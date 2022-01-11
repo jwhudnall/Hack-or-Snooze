@@ -73,7 +73,7 @@ class StoryList {
    * Returns the new Story instance
    */
 
-  async addStory(user, {title, author, url} {
+  async addStory(user, {title, author, url}) {
     const response = await axios({
       url: `${BASE_URL}/stories`,
       method: "POST",
